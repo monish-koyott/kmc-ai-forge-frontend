@@ -1,7 +1,6 @@
 @using System.ComponentModel.DataAnnotations
 @using KmcAiBlazorApp.Models
 @using System.Text.Json
-@inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
 
 <div class="document-upload-section">
@@ -67,114 +66,16 @@
                     <p class="subtitle">@UploadedFiles.Count document@(UploadedFiles.Count == 1 ? "" : "s") ready for validation processing.</p>
                 </div>
             </div>
-            <button class="process-btn" @onclick="StartProcessing">Start Processing</button>
+            <button class="process-btn" @onclick="StartProcessing" disabled="@isProcessing">
+                @if (isProcessing)
+                {
+                    <span>Processing...</span>
+                }
+                else
+                {
+                    <span>Start Processing</span>
+                }
+            </button>
         </div>
     }
 </div>
-
-@code {
-    private InputFile? fileInput;
-    private DotNetObjectReference<DocumentUpload>? objRef;
-    
-    [Parameter]
-    public List<UploadedFile> UploadedFiles { get; set; } = new();
-    
-    [Parameter]
-    public EventCallback<List<UploadedFile>> UploadedFilesChanged { get; set; }
-    
-    private void HandleDragEnter()
-    {
-        // Visual feedback handled by CSS
-    }
-    
-    private void HandleDragLeave()
-    {
-        // Visual feedback handled by CSS
-    }
-    
-    private async Task HandleDrop()
-    {
-        // Will be implemented with JavaScript interop
-    }
-
-
-    
-    private async Task HandleClick()
-    {
-        try
-        {
-            // Trigger the file input
-            await TriggerFileInput();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error in HandleClick: {ex.Message}");
-        }
-    }
-    
-    private async Task TriggerFileInput()
-    {
-        try
-        {
-            if (fileInput != null)
-            {
-                // Use JavaScript to trigger the file input click
-                await JSRuntime.InvokeVoidAsync("triggerFileInput");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error triggering file input: {ex.Message}");
-        }
-    }
-    
-    private async Task HandleFileSelection(InputFileChangeEventArgs e)
-    {
-        try
-        {
-            var newFiles = new List<UploadedFile>();
-            
-            foreach (var file in e.GetMultipleFiles())
-            {
-                var uploadedFile = new UploadedFile
-                {
-                    Name = file.Name,
-                    Size = file.Size,
-                    ContentType = file.ContentType,
-                    File = file
-                };
-                newFiles.Add(uploadedFile);
-            }
-            
-            // Create a new list with existing files + new files
-            var updatedFiles = new List<UploadedFile>(UploadedFiles);
-            updatedFiles.AddRange(newFiles);
-            
-            // Notify parent component of the change with the updated list
-            await UploadedFilesChanged.InvokeAsync(updatedFiles);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error in HandleFileSelection: {ex.Message}");
-        }
-    }
-    
-    private void StartProcessing()
-    {
-        // Start processing logic
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            objRef = DotNetObjectReference.Create(this);
-            await JSRuntime.InvokeVoidAsync("setupDragAndDrop", "drop-zone", objRef);
-        }
-    }
-
-    public void Dispose()
-    {
-        objRef?.Dispose();
-    }
-}

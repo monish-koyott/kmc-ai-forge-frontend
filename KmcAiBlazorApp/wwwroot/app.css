@@ -498,6 +498,19 @@ html, body {
     box-shadow: 0 4px 8px rgba(0,123,255,0.3);
 }
 
+.process-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.process-btn:disabled:hover {
+    background-color: #6c757d;
+    transform: none;
+    box-shadow: none;
+}
+
 /* Uploaded Files Section */
 .uploaded-files-section {
     width: 100%;
