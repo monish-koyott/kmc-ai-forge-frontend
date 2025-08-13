@@ -1,0 +1,72 @@
+﻿@page "/"
+@using KmcAiBlazorApp.Models
+@rendermode InteractiveServer
+
+<div class="kmc-container">
+    <!-- Header -->
+    <Header />
+    
+    <div class="main-content">
+        <!-- Left Sidebar -->
+        <WorkflowProgress CurrentStep="currentWorkflowStep" CurrentStepChanged="HandleWorkflowStepChanged" />
+        
+        <!-- Main Content Area -->
+        <div class="content-area">
+            <DocumentUpload UploadedFiles="uploadedFiles" UploadedFilesChanged="HandleFilesChanged" />
+            <UploadedFiles Files="uploadedFiles" OnFileRemoved="HandleFileRemoved" />
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<UploadedFile> uploadedFiles = new();
+    private int currentWorkflowStep = 1;
+    
+    private async Task HandleFilesChanged(List<UploadedFile> files)
+    {
+        try
+        {
+            // Update the list with the new files
+            uploadedFiles = files;
+            
+            // Force UI refresh
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Home: Error in HandleFilesChanged: {ex.Message}");
+        }
+    }
+    
+    private async Task HandleFileRemoved(UploadedFile file)
+    {
+        try
+        {
+            // Remove the file from the list
+            uploadedFiles.Remove(file);
+            
+            // Force UI refresh
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Home: Error in HandleFileRemoved: {ex.Message}");
+        }
+    }
+    
+    private async Task HandleWorkflowStepChanged(int step)
+    {
+        try
+        {
+            currentWorkflowStep = step;
+            Console.WriteLine($"Workflow step changed to: {step}");
+            
+            // Force UI refresh
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Home: Error in HandleWorkflowStepChanged: {ex.Message}");
+        }
+    }
+}

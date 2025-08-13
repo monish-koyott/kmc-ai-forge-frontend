@@ -1,0 +1,86 @@
+@using KmcAiBlazorApp.Models
+@rendermode InteractiveServer
+
+<div class="uploaded-files-section">
+    <h3>Uploaded Files (@Files.Count)</h3>
+    
+    @if (Files.Any())
+    {
+        <div class="files-list">
+            @foreach (var file in Files)
+            {
+                <div class="file-item">
+                    <div class="file-icon">@GetFileIcon(file.ContentType)</div>
+                    <div class="file-info">
+                        <div class="file-name">@file.Name</div>
+                        <div class="file-details">
+                            <span class="file-type">@GetFileType(file.ContentType)</span>
+                            <span class="file-size">@FormatFileSize(file.Size)</span>
+                        </div>
+                    </div>
+                    <button class="remove-btn" @onclick="()=>RemoveFile(file)" title="Remove file">×</button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="no-files-message">
+            <p>No files uploaded yet. Select files using the upload area above.</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<UploadedFile> Files { get; set; } = new();
+    
+    [Parameter]
+    public EventCallback<UploadedFile> OnFileRemoved { get; set; }
+    
+    private string GetFileIcon(string contentType)
+    {
+        return contentType.ToLower() switch
+        {
+            var type when type.Contains("pdf") => "📄",
+            var type when type.Contains("word") || type.Contains("doc") => "📝",
+            var type when type.Contains("excel") || type.Contains("sheet") || type.Contains("xls") => "📊",
+            var type when type.Contains("image") || type.Contains("jpg") || type.Contains("jpeg") || type.Contains("png") => "🖼️",
+            _ => "📎"
+        };
+    }
+    
+    private string GetFileType(string contentType)
+    {
+        return contentType.ToLower() switch
+        {
+            var type when type.Contains("pdf") => "PDF Document",
+            var type when type.Contains("word") || type.Contains("doc") => "Word Document",
+            var type when type.Contains("excel") || type.Contains("sheet") || type.Contains("xls") => "Excel Spreadsheet",
+            var type when type.Contains("image") || type.Contains("jpg") || type.Contains("jpeg") => "JPEG Image",
+            var type when type.Contains("png") => "PNG Image",
+            _ => "Unknown File Type"
+        };
+    }
+    
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        int order = 0;
+        double size = bytes;
+        
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size /= 1024;
+        }
+        
+        return $"{size:0.##} {sizes[order]}";
+    }
+    
+    private async Task RemoveFile(UploadedFile file)
+    {
+        Files.Remove(file);
+        await OnFileRemoved.InvokeAsync(file);
+    }
+}

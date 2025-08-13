@@ -1,0 +1,180 @@
+@using System.ComponentModel.DataAnnotations
+@using KmcAiBlazorApp.Models
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<div class="document-upload-section">
+    <!-- Demo Scenario -->
+    <div class="demo-scenario">
+        <div class="demo-indicator">
+            <div class="demo-dot"></div>
+            <span>Demo Scenario Active</span>
+        </div>
+        <p class="demo-text">Running: Missing Documents scenario</p>
+    </div>
+    
+    <!-- How to use -->
+    <div class="how-to-use">
+        <h3>How to use this tool:</h3>
+        <ol>
+            <li><strong>Upload Documents:</strong> Drag and drop or click to upload your portfolio documents for validation.</li>
+            <li><strong>View Results & Take Action:</strong> Review the validation results and take the necessary actions.</li>
+        </ol>
+    </div>
+    
+    <!-- Document Upload Area -->
+    <div class="upload-area">
+        <h3>Document Upload</h3>
+        <p class="upload-subtitle">Upload your documents for portfolio validation.</p>
+        
+        <!-- File input with proper event binding -->
+        <InputFile @ref="fileInput" OnChange="HandleFileSelection" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx" class="hidden-file-input" />
+        
+        <!-- Clickable drop zone with multiple event handlers -->
+        <div id="drop-zone" class="drop-zone" 
+             @onclick="HandleClick"
+             @onclick:preventDefault="true">
+            <div class="upload-content">
+                <div class="upload-icon">↑</div>
+                <h4>Upload Documents</h4>
+                <p>Drag and drop your files here, or click anywhere to browse.</p>
+                <div class="supported-formats">
+                    <p><strong>Examples:</strong> FMA, Portfolio Form, ASTs, Equifax Commercial Credit Search, Mortgage Statements, Bank Statements</p>
+                    <p><strong>Supported formats:</strong> PDF, DOC, DOCX, JPG, PNG, XLS, XLSX</p>
+                </div>
+                
+                <!-- Visual button indicator -->
+                <div class="file-input-container">
+                    <div class="upload-btn-indicator">
+                        <span>Click anywhere to choose files</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ready to Process -->
+    @if (UploadedFiles.Any())
+    {
+        <div class="ready-to-process">
+            <div class="ready-content">
+                <div class="ready-indicator">
+                    <span class="checkmark">✓</span>
+                </div>
+                <div class="ready-text">
+                    <p>Ready to Process</p>
+                    <p class="subtitle">@UploadedFiles.Count document@(UploadedFiles.Count == 1 ? "" : "s") ready for validation processing.</p>
+                </div>
+            </div>
+            <button class="process-btn" @onclick="StartProcessing">Start Processing</button>
+        </div>
+    }
+</div>
+
+@code {
+    private InputFile? fileInput;
+    private DotNetObjectReference<DocumentUpload>? objRef;
+    
+    [Parameter]
+    public List<UploadedFile> UploadedFiles { get; set; } = new();
+    
+    [Parameter]
+    public EventCallback<List<UploadedFile>> UploadedFilesChanged { get; set; }
+    
+    private void HandleDragEnter()
+    {
+        // Visual feedback handled by CSS
+    }
+    
+    private void HandleDragLeave()
+    {
+        // Visual feedback handled by CSS
+    }
+    
+    private async Task HandleDrop()
+    {
+        // Will be implemented with JavaScript interop
+    }
+
+
+    
+    private async Task HandleClick()
+    {
+        try
+        {
+            // Trigger the file input
+            await TriggerFileInput();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in HandleClick: {ex.Message}");
+        }
+    }
+    
+    private async Task TriggerFileInput()
+    {
+        try
+        {
+            if (fileInput != null)
+            {
+                // Use JavaScript to trigger the file input click
+                await JSRuntime.InvokeVoidAsync("triggerFileInput");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error triggering file input: {ex.Message}");
+        }
+    }
+    
+    private async Task HandleFileSelection(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var newFiles = new List<UploadedFile>();
+            
+            foreach (var file in e.GetMultipleFiles())
+            {
+                var uploadedFile = new UploadedFile
+                {
+                    Name = file.Name,
+                    Size = file.Size,
+                    ContentType = file.ContentType,
+                    File = file
+                };
+                newFiles.Add(uploadedFile);
+            }
+            
+            // Create a new list with existing files + new files
+            var updatedFiles = new List<UploadedFile>(UploadedFiles);
+            updatedFiles.AddRange(newFiles);
+            
+            // Notify parent component of the change with the updated list
+            await UploadedFilesChanged.InvokeAsync(updatedFiles);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in HandleFileSelection: {ex.Message}");
+        }
+    }
+    
+    private void StartProcessing()
+    {
+        // Start processing logic
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("setupDragAndDrop", "drop-zone", objRef);
+        }
+    }
+
+    public void Dispose()
+    {
+        objRef?.Dispose();
+    }
+}
