@@ -12,8 +12,12 @@ builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri("http://l
 // Add HttpClient for API calls with proper configuration
 builder.Services.AddHttpClient("BackendAPI", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5000/");
-    client.Timeout = TimeSpan.FromMinutes(5); // 5 minutes timeout for file uploads
+    var configuration = builder.Configuration;
+    var backendApiBaseUrl = configuration["BackendAPI:BaseUrl"] ?? "http://localhost:5000/";
+    var backendApiTimeout = configuration.GetValue("BackendAPI:TimeoutSeconds", 300); // default 5 minutes
+
+    client.BaseAddress = new Uri(backendApiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(backendApiTimeout);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
