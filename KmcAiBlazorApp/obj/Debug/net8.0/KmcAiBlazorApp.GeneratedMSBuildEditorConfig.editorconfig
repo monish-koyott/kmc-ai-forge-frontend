@@ -9,51 +9,53 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = KmcAiBlazorApp
 build_property.RootNamespace = KmcAiBlazorApp
-build_property.ProjectDir = /Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/
+build_property.ProjectDir = /Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = /Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp
+build_property.MSBuildProjectDirectory = /Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp
 build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
 
-[/Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/Components/App.razor]
+[/Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/Components/App.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/Components/DocumentUpload.razor]
+[/Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/Components/DocumentUpload.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Eb2N1bWVudFVwbG9hZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/Components/Header.razor]
+[/Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/Components/Header.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9IZWFkZXIucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/Components/Pages/Error.razor]
+[/Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/Components/Pages/Error.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9FcnJvci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/Components/Pages/Home.razor]
+[/Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/Components/Pages/Home.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ib21lLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/Components/Routes.razor]
+[/Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/Components/Routes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Sb3V0ZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/Components/UploadedFiles.razor]
+[/Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/Components/UploadedFiles.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9VcGxvYWRlZEZpbGVzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/Components/WorkflowProgress.razor]
+[/Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/Components/WorkflowProgress.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Xb3JrZmxvd1Byb2dyZXNzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/Components/_Imports.razor]
+[/Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/Components/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9fSW1wb3J0cy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/Monish.Koyott/Desktop/KMC-AI-Forge-BTL/kmc-ai-frontend/KmcAiBlazorApp/Components/Layout/MainLayout.razor]
+[/Users/vishal.modi/kmc-ai-forge-frontend/KmcAiBlazorApp/Components/Layout/MainLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTWFpbkxheW91dC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-cht4x4itel
