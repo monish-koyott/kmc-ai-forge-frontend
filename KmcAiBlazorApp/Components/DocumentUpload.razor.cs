@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components.Server.Circuits;
+using ProcessingStatus = KmcAiBlazorApp.Models.ProcessingStatus;
+using ProcessingStep = KmcAiBlazorApp.Models.ProcessingStep;
 
 namespace KmcAiBlazorApp.Components;
 
@@ -34,6 +36,10 @@ public partial class DocumentUpload : ComponentBase, IDisposable
     string? PortfolioId = "test-portfolio-123";
     string Status = "Disconnected";
     List<string> Lines = new();
+    
+    // ProcessingModal reference
+    private ProcessingModal? processingModal;
+    private bool showProcessingModal = false;
 
     async Task ConnectAsync()
     {
@@ -132,6 +138,91 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             // Update status with progress label
             Status = $"🔄 Processing: {update.Message} ({update.Progress}%)";
             
+            // Update ProcessingModal based on the ProcessingStep
+            if (processingModal != null)
+            {
+                Console.WriteLine($"Updating ProcessingModal - Progress: {update.Progress}%, Step: {update.ProcessingStep}, Status: {update.ProcessingStatus}");
+                
+                // Wrap all modal updates in InvokeAsync to ensure UI thread execution
+                _ = InvokeAsync(async () =>
+                {
+                    processingModal.UpdateProgress(update.Progress);
+                    
+                                    // Map ProcessingStep to modal step descriptions
+                var stepDescription = update.ProcessingStep switch
+                {
+                    KmcAiBlazorApp.Models.ProcessingStep.DocumentValidation => "Document Validation",
+                    KmcAiBlazorApp.Models.ProcessingStep.PortfolioCompletion => "Portfolio Completion",
+                    KmcAiBlazorApp.Models.ProcessingStep.CompanyHouseValidation => "Company House Validation",
+                    KmcAiBlazorApp.Models.ProcessingStep.ProcessingComplete => "Final Processing & Completion",
+                    _ => "Processing..."
+                };
+                // Handle the "Next Step" notification (when backend sends "Starting..." or "Finalizing...")
+                if (update.Message.StartsWith("Starting") || update.Message.StartsWith("Finalizing"))
+                {
+                    // This is a "next step" notification - set current step to InProgress
+                    foreach (var step in processingModal.ProcessingSteps)
+                    {
+                        if (step.Description == stepDescription)
+                        {
+                            step.Status = ProcessingStatus.InProgress;
+                        }
+                        else if (step.Status == ProcessingStatus.InProgress)
+                        {
+                            // Reset other in-progress steps back to Alert
+                            step.Status = ProcessingStatus.Alert;
+                        }
+                    }
+                    
+                    // Mark previous steps as Success
+                    var stepIndex = processingModal.ProcessingSteps.FindIndex(s => s.Description == stepDescription);
+                    if (stepIndex > 0)
+                    {
+                        for (int i = 0; i < stepIndex; i++)
+                        {
+                            if (processingModal.ProcessingSteps[i].Status == ProcessingStatus.Alert)
+                            {
+                                processingModal.ProcessingSteps[i].Status = ProcessingStatus.Success;
+                            }
+                        }
+                    }
+                    
+                    Console.WriteLine($"Next Step Notification - Step: {stepDescription}, Message: {update.Message}");
+                }
+                else
+                {
+                    // This is a completion notification - set current step to Success/Failure
+                    var modalStatus = update.ProcessingStatus switch
+                    {
+                        ProcessingStatus.Success => ProcessingStatus.Success,
+                        ProcessingStatus.Failure => ProcessingStatus.Failure,
+                        ProcessingStatus.Alert => ProcessingStatus.Alert,
+                        _ => ProcessingStatus.InProgress
+                    };
+                    
+                    foreach (var step in processingModal.ProcessingSteps)
+                    {
+                        if (step.Description == stepDescription)
+                        {
+                            step.Status = modalStatus;
+                        }
+                    }
+                    
+                    Console.WriteLine($"Completion Notification - Step: {stepDescription}, Status: {modalStatus}, Message: {update.Message}");
+                }
+                
+                Console.WriteLine($"Modal Update - Step: {stepDescription}, Message: {update.Message}");
+                    
+                    processingModal.UpdateValidationMessage(stepDescription, update.Message);
+                    
+                    StateHasChanged();
+                });
+            }
+            else
+            {
+                Console.WriteLine("ProcessingModal is null - cannot update modal");
+            }
+            
             Add("ProcessingUpdate", update);
             _ = InvokeAsync(StateHasChanged);
         }
@@ -153,6 +244,19 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             var totalCount = update.TotalDocuments;
             Status = $"📋 Document Validation: {validCount} valid, {invalidCount} invalid out of {totalCount} total ({update.Progress}%)";
             
+            // Update ProcessingModal
+            if (processingModal != null)
+            {
+                _ = InvokeAsync(async () =>
+                {
+                    processingModal.UpdateProgress(update.Progress);
+                    processingModal.UpdateStepStatus("Document Validation", ProcessingStatus.Success);
+                    var validationMessage = $"Valid: {validCount}, Invalid: {invalidCount}, Total: {totalCount}";
+                    processingModal.UpdateValidationMessage("Document Validation", validationMessage);
+                    StateHasChanged();
+                });
+            }
+            
             Add("DocumentValidationUpdate", update);
             _ = InvokeAsync(StateHasChanged);
         }
@@ -172,6 +276,19 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             var hasData = update.HasPortfolioData ? "Found" : "Not found";
             var companyName = !string.IsNullOrEmpty(update.CompanyName) ? update.CompanyName : "N/A";
             Status = $"📊 Portfolio Validation: {hasData} portfolio data, Company: {companyName}, Properties: {update.PropertyCount} ({update.Progress}%)";
+            
+            // Update ProcessingModal
+            if (processingModal != null)
+            {
+                _ = InvokeAsync(async () =>
+                {
+                    processingModal.UpdateProgress(update.Progress);
+                    processingModal.UpdateStepStatus("Portfolio Completion", ProcessingStatus.Success);
+                    var validationMessage = $"Portfolio data: {hasData}, Company: {companyName}, Properties: {update.PropertyCount}";
+                    processingModal.UpdateValidationMessage("Portfolio Completion", validationMessage);
+                    StateHasChanged();
+                });
+            }
             
             Add("PortfolioCompletionUpdate", update);
             _ = InvokeAsync(StateHasChanged);
@@ -193,6 +310,19 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             var companyNumber = !string.IsNullOrEmpty(update.CompanyNumber) ? update.CompanyNumber : "N/A";
             Status = $"🏢 Company House Validation: {hasData} company data, Company Number: {companyNumber}, Charges: {update.ChargeCount} ({update.Progress}%)";
             
+            // Update ProcessingModal
+            if (processingModal != null)
+            {
+                _ = InvokeAsync(async () =>
+                {
+                    processingModal.UpdateProgress(update.Progress);
+                    processingModal.UpdateStepStatus("Company House Validation", ProcessingStatus.Success);
+                    var validationMessage = $"Company data: {hasData}, Company Number: {companyNumber}, Charges: {update.ChargeCount}";
+                    processingModal.UpdateValidationMessage("Company House Validation", validationMessage);
+                    StateHasChanged();
+                });
+            }
+            
             Add("CompanyHouseValidationUpdate", update);
             _ = InvokeAsync(StateHasChanged);
         }
@@ -212,6 +342,37 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             var successStatus = update.Success ? "✅ Successfully completed" : "❌ Failed";
             var processingTime = !string.IsNullOrEmpty(update.ProcessingTime) ? update.ProcessingTime : "N/A";
             Status = $"🎯 Processing Complete: {successStatus} in {processingTime} ({update.Progress}%)";
+            
+            // Update ProcessingModal
+            if (processingModal != null)
+            {
+                _ = InvokeAsync(async () =>
+                {
+                    processingModal.UpdateProgress(update.Progress);
+                    
+                    // Mark all steps as Success when processing is complete
+                    foreach (var step in processingModal.ProcessingSteps)
+                    {
+                        if (step.Status == ProcessingStatus.InProgress || step.Status == ProcessingStatus.Alert)
+                        {
+                            step.Status = ProcessingStatus.Success;
+                        }
+                    }
+                    
+                    // Update the final step with completion message
+                    processingModal.UpdateStepStatus("Final Processing & Completion", ProcessingStatus.Success);
+                    var validationMessage = $"Processing {successStatus} in {processingTime}";
+                    processingModal.UpdateValidationMessage("Final Processing & Completion", validationMessage);
+                    
+                    // Mark processing as complete
+                    processingModal.IsProcessingComplete = true;
+                    
+                    StateHasChanged();
+                    
+                    // Keep modal open - don't close automatically
+                    // User can close manually or click "See Results" button
+                });
+            }
             
             Add("ProcessingCompleteUpdate", update);
             _ = InvokeAsync(StateHasChanged);
@@ -343,6 +504,8 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             }
 
             isProcessing = true;
+            showProcessingModal = true;
+            Console.WriteLine($"Modal visibility set to: {showProcessingModal}");
             _ = InvokeAsync(StateHasChanged);
 
             // Disconnect any existing SignalR connection
@@ -534,8 +697,8 @@ public partial class DocumentUpload : ComponentBase, IDisposable
                         Console.WriteLine($"Status: {status}");
                     }
                     
-                    // Show success message
-                    await ShowErrorSafe("Files uploaded successfully! Processing has started.");
+                    // Success - no alert needed, modal will show progress
+                    Console.WriteLine("Files uploaded successfully! Processing has started.");
                 }
                 catch (Exception ex)
                 {
@@ -584,7 +747,33 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             formData?.Dispose();
             
             isProcessing = false;
-            _ = InvokeAsync(StateHasChanged);
+            
+            // Ensure progress bar reaches 100% and mark all steps as success
+            if (processingModal != null)
+            {
+                _ = InvokeAsync(async () =>
+                {
+                    // Set progress to 100% if not already there
+                    processingModal.UpdateProgress(100);
+                    
+                    // Mark all remaining steps as Success
+                    foreach (var step in processingModal.ProcessingSteps)
+                    {
+                        if (step.Status == ProcessingStatus.InProgress || step.Status == ProcessingStatus.Alert)
+                        {
+                            step.Status = ProcessingStatus.Success;
+                        }
+                    }
+                    
+                    // Mark processing as complete
+                    processingModal.IsProcessingComplete = true;
+                    
+                    StateHasChanged();
+                    
+                    // Keep modal open - don't close automatically
+                    // User can close manually or click "See Results" button
+                });
+            }
         }
     }
     
@@ -629,6 +818,22 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             Console.WriteLine($"Original message: {message}");
         }
     }
-
+    
+    // Modal event handlers
+    private async Task HandleCancelProcessing()
+    {
+        showProcessingModal = false;
+        isProcessing = false;
+        await DisconnectAsync();
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+    
+    private async Task HandleViewResults()
+    {
+        showProcessingModal = false;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
 
 }
