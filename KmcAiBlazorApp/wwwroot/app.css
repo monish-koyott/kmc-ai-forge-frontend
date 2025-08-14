@@ -138,6 +138,49 @@ html, body {
     background-color: #0056b3;
 }
 
+.btn-secondary {
+    background-color: #6C757D;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-success {
+    background-color: #28A745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-warning {
+    background-color: #FFC107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-outline-secondary {
+    background-color: transparent;
+    color: #6C757D;
+    border: 1px solid #6C757D;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6C757D;
+    color: white;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 12px;
+}
+
 /* Main Content */
 .main-content {
     width: 100%;
@@ -608,6 +651,12 @@ html, body {
     color: #DC3545;
     background-color: #F8F9FA;
 }
+
+
+
+
+
+
 
 /* Responsive Design */
 @media (max-width: 768px) {

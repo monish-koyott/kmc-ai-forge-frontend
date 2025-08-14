@@ -1,10 +1,13 @@
 using KmcAiBlazorApp.Components;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri("http://localhost:5001/") });
 
 // Add HttpClient for API calls with proper configuration
 builder.Services.AddHttpClient("BackendAPI", client =>
@@ -14,13 +17,18 @@ builder.Services.AddHttpClient("BackendAPI", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// Add SignalR service
+
+
 // Add CORS to allow cross-origin requests
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
+        policy
+                
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
               .AllowAnyHeader();
     });
 });
