@@ -6,7 +6,6 @@ html, body {
     max-width: none;
     overflow-x: hidden;
 }
-
 .page {
     width: 100%;
     max-width: none;
@@ -14,7 +13,6 @@ html, body {
     padding: 0;
     overflow-x: hidden;
 }
-
 .content {
     width: 100%;
     max-width: none;
@@ -22,7 +20,6 @@ html, body {
     padding: 0;
     overflow-x: hidden;
 }
-
 /* Hidden file input */
 .hidden-file-input {
     position: absolute;
@@ -32,7 +29,6 @@ html, body {
     opacity: 0;
     pointer-events: none;
 }
-
 /* KMC Container */
 .kmc-container {
     width: 100%;
@@ -43,7 +39,6 @@ html, body {
     min-height: 100vh;
     background-color: #F8F9FA;
 }
-
 /* Header */
 .header {
     width: 100%;
@@ -59,18 +54,15 @@ html, body {
     justify-content: space-between;
     align-items: center;
 }
-
 .header-left {
     display: flex;
     align-items: center;
 }
-
 .logo-section {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
-
 .logo {
     width: 50px;
     height: 50px;
@@ -83,31 +75,26 @@ html, body {
     font-weight: bold;
     color: white;
 }
-
 .title-section {
     display: flex;
     flex-direction: column;
 }
-
 .main-title {
     margin: 0;
     font-size: 24px;
     font-weight: 600;
     color: white;
 }
-
 .subtitle {
     margin: 0;
     font-size: 14px;
     color: #E8E8E8;
     opacity: 0.9;
 }
-
 .header-right {
     display: flex;
     gap: 1rem;
 }
-
 .btn {
     padding: 0.5rem 1rem;
     border: none;
@@ -117,70 +104,56 @@ html, body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
 .btn-outline-primary {
     background-color: white;
     color: #007BFF;
     border: 2px solid #007BFF;
 }
-
 .btn-outline-primary:hover {
     background-color: #007BFF;
     color: white;
 }
-
 .btn-primary {
     background-color: #007BFF;
     color: white;
 }
-
 .btn-primary:hover {
     background-color: #0056b3;
 }
-
 .btn-secondary {
     background-color: #6C757D;
     color: white;
 }
-
 .btn-secondary:hover {
     background-color: #5a6268;
 }
-
 .btn-success {
     background-color: #28A745;
     color: white;
 }
-
 .btn-success:hover {
     background-color: #218838;
 }
-
 .btn-warning {
     background-color: #FFC107;
     color: #212529;
 }
-
 .btn-warning:hover {
     background-color: #e0a800;
 }
-
 .btn-outline-secondary {
     background-color: transparent;
     color: #6C757D;
     border: 1px solid #6C757D;
 }
-
 .btn-outline-secondary:hover {
     background-color: #6C757D;
     color: white;
 }
-
 .btn-sm {
     padding: 0.25rem 0.5rem;
     font-size: 12px;
 }
-
 /* Main Content */
 .main-content {
     width: 100%;
@@ -191,7 +164,6 @@ html, body {
     display: flex;
     min-height: calc(100vh - 90px);
 }
-
 /* Workflow Sidebar */
 .workflow-sidebar {
     width: 300px;
@@ -200,20 +172,17 @@ html, body {
     padding: 2rem;
     box-shadow: 2px 0 4px rgba(0,0,0,0.1);
 }
-
 .sidebar-title {
     margin: 0 0 1rem 0;
     font-size: 18px;
     font-weight: 600;
     color: white;
 }
-
 .workflow-steps {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
 }
-
 .workflow-step {
     display: flex;
     align-items: flex-start;
@@ -223,24 +192,19 @@ html, body {
     transition: all 0.2s ease;
     cursor: pointer;
 }
-
 .workflow-step.clickable {
     cursor: pointer;
 }
-
 .workflow-step.clickable:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
-
 .workflow-step.active {
     background-color: #007BFF;
 }
-
 .workflow-step.pending {
     background-color: #4A5C6F;
 }
-
 .step-number {
     width: 30px;
     height: 30px;
@@ -253,24 +217,20 @@ html, body {
     font-size: 16px;
     color: white;
 }
-
 .step-content {
     flex: 1;
 }
-
 .step-title {
     margin: 0 0 0.5rem 0;
     font-size: 16px;
     font-weight: 600;
     color: white;
 }
-
 .step-subtitle {
     margin: 0 0 0.5rem 0;
     font-size: 14px;
     color: rgba(255,255,255,0.9);
 }
-
 .step-status {
     display: inline-block;
     padding: 0.25rem 0.75rem;
@@ -279,17 +239,14 @@ html, body {
     font-weight: 500;
     text-transform: uppercase;
 }
-
 .workflow-step.active .step-status {
     background-color: rgba(255,255,255,0.2);
     color: white;
 }
-
 .workflow-step.pending .step-status {
     background-color: rgba(255,255,255,0.1);
     color: rgba(255,255,255,0.7);
 }
-
 /* Content Area */
 .content-area {
     width: 100%;
@@ -301,7 +258,6 @@ html, body {
     padding: 2rem;
     background-color: #F8F9FA;
 }
-
 /* Document Upload Section */
 .document-upload-section {
     width: 100%;
@@ -314,70 +270,58 @@ html, body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     overflow: hidden;
 }
-
 .demo-scenario {
     background-color: #E0F2F7;
     padding: 1.5rem;
     border-bottom: 1px solid #E9ECEF;
 }
-
 .demo-indicator {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 0.5rem;
 }
-
 .demo-dot {
     width: 12px;
     height: 12px;
     background-color: #007BFF;
     border-radius: 50%;
 }
-
 .demo-text {
     margin: 0;
     color: #2C3E50;
     font-weight: 500;
 }
-
 .how-to-use {
     padding: 1.5rem;
     border-bottom: 1px solid #E9ECEF;
 }
-
 .how-to-use h3 {
     margin: 0 0 1rem 0;
     color: #2C3E50;
     font-size: 18px;
 }
-
 .how-to-use ol {
     margin: 0;
     padding-left: 1.5rem;
     color: #2C3E50;
 }
-
 .how-to-use li {
     margin-bottom: 0.5rem;
 }
-
 .upload-area {
     padding: 1.5rem;
     border-bottom: 1px solid #E9ECEF;
 }
-
 .upload-area h3 {
     margin: 0 0 0.5rem 0;
     color: #2C3E50;
     font-size: 18px;
 }
-
 .upload-subtitle {
     margin: 0 0 1.5rem 0;
     color: #6C757D;
 }
-
 .drop-zone {
     border: 2px dashed #DEE2E6;
     border-radius: 8px;
@@ -389,47 +333,39 @@ html, body {
     position: relative;
     pointer-events: auto;
 }
-
 .drop-zone:hover {
     border-color: #007BFF;
     background-color: #F8F9FA;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,123,255,0.1);
 }
-
 .drop-zone.drag-over {
     border-color: #007BFF;
     background-color: #E0F2F7;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,123,255,0.2);
 }
-
 .drop-zone:active {
     transform: translateY(0);
     box-shadow: 0 2px 6px rgba(0,123,255,0.1);
 }
-
 .upload-content {
     pointer-events: none;
 }
-
 .upload-icon {
     font-size: 48px;
     color: #6C757D;
     margin-bottom: 1rem;
 }
-
 .upload-content h4 {
     margin: 0 0 0.5rem 0;
     color: #2C3E50;
     font-size: 20px;
 }
-
 .upload-content p {
     margin: 0 0 1rem 0;
     color: #6C757D;
 }
-
 .supported-formats {
     margin: 1.5rem 0;
     padding: 1rem;
@@ -437,17 +373,14 @@ html, body {
     border-radius: 6px;
     text-align: left;
 }
-
 .supported-formats p {
     margin: 0.5rem 0;
     font-size: 14px;
     color: #6C757D;
 }
-
 .file-input-container {
     margin-top: 1.5rem;
 }
-
 .upload-btn-indicator {
     display: inline-block;
     padding: 0.75rem 2rem;
@@ -459,12 +392,10 @@ html, body {
     transition: all 0.2s ease;
     pointer-events: none;
 }
-
 .drop-zone:hover .upload-btn-indicator {
     background-color: #0056b3;
     transform: scale(1.05);
 }
-
 /* Ready to Process */
 .ready-to-process {
     background-color: #F8F9FA;
@@ -476,19 +407,16 @@ html, body {
     align-items: center;
     justify-content: space-between;
 }
-
 .ready-content {
     display: flex;
     align-items: center;
     gap: 0.75rem;
 }
-
 .ready-indicator {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
-
 .checkmark {
     color: #28A745;
     font-size: 20px;
@@ -502,26 +430,22 @@ html, body {
     justify-content: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
 .ready-text {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
 }
-
 .ready-to-process p {
     margin: 0;
     color: #2C3E50;
     font-weight: 600;
     font-size: 16px;
 }
-
 .ready-to-process .subtitle {
     font-size: 14px;
     color: #6c757d;
     font-weight: 400;
 }
-
 .process-btn {
     padding: 0.75rem 2rem;
     font-size: 16px;
@@ -534,26 +458,22 @@ html, body {
     box-shadow: 0 2px 4px rgba(0,123,255,0.2);
     white-space: nowrap;
 }
-
 .process-btn:hover {
     background-color: #0056b3;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0,123,255,0.3);
 }
-
 .process-btn:disabled {
     background-color: #6c757d;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
 }
-
 .process-btn:disabled:hover {
     background-color: #6c757d;
     transform: none;
     box-shadow: none;
 }
-
 /* Uploaded Files Section */
 .uploaded-files-section {
     width: 100%;
@@ -567,25 +487,21 @@ html, body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     padding: 1.5rem;
 }
-
 .uploaded-files-section h3 {
     margin: 0 0 1.5rem 0;
     color: #2C3E50;
     font-size: 18px;
 }
-
 .no-files-message {
     text-align: center;
     padding: 2rem;
     color: #6C757D;
 }
-
 .files-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
-
 .file-item {
     width: 100%;
     max-width: none;
@@ -601,41 +517,33 @@ html, body {
     background-color: white;
     transition: all 0.2s ease;
 }
-
 .file-item:hover {
     border-color: #007BFF;
     box-shadow: 0 2px 4px rgba(0,123,255,0.1);
 }
-
 .file-icon {
     font-size: 24px;
     color: #007BFF;
 }
-
 .file-info {
     flex: 1;
 }
-
 .file-name {
     font-weight: 500;
     color: #2C3E50;
     margin-bottom: 0.25rem;
 }
-
 .file-details {
     display: flex;
     gap: 1rem;
     font-size: 14px;
 }
-
 .file-type {
     color: #6C757D;
 }
-
 .file-size {
     color: #6C757D;
 }
-
 .remove-btn {
     background: none;
     border: none;
@@ -646,18 +554,251 @@ html, body {
     border-radius: 4px;
     transition: all 0.2s ease;
 }
-
 .remove-btn:hover {
     color: #DC3545;
     background-color: #F8F9FA;
 }
-
-
-
-
-
-
-
+/* Processing Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease;
+}
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+.modal-header h3 {
+    margin: 0;
+    color: #2C3E50;
+    font-size: 20px;
+    font-weight: 600;
+}
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+.close-button:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+.modal-body {
+    padding: 1.5rem;
+}
+.instruction-text {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 16px;
+}
+.processing-steps {
+    margin-bottom: 2rem;
+}
+.processing-step {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+.processing-step:last-child {
+    border-bottom: none;
+}
+.step-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-weight: bold;
+    font-size: 14px;
+}
+.step-icon .checkmark {
+    color: #28a745;
+    background-color: #d4edda;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.step-icon .failure {
+    color: #dc3545;
+    background-color: #f8d7da;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.step-icon .spinner {
+    color: #ffc107;
+    background-color: #fff3cd;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: spin 1s linear infinite;
+}
+.step-icon .pending {
+    color: #6c757d;
+    background-color: #f8f9fa;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.step-content {
+    flex: 1;
+}
+.step-text {
+    color: #2C3E50;
+    font-size: 16px;
+    margin-bottom: 0.25rem;
+}
+.validation-message {
+    font-size: 14px;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.25rem;
+}
+.validation-message.completed {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 3px solid #28a745;
+}
+.validation-message.failed {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 3px solid #dc3545;
+}
+.validation-message.inprogress {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 3px solid #ffc107;
+}
+.validation-message.pending {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border-left: 3px solid #6c757d;
+}
+.progress-section {
+    margin-bottom: 2rem;
+}
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+.progress-fill {
+    height: 100%;
+    background-color: #007bff;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+.progress-text {
+    text-align: center;
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+}
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+    border-top: 1px solid #e9ecef;
+    gap: 1rem;
+}
+.modal-footer .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+}
+.modal-footer .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+.btn-secondary:hover:not(:disabled) {
+    background-color: #545b62;
+}
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+.btn-primary:hover:not(:disabled) {
+    background-color: #0056b3;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
     .header {
