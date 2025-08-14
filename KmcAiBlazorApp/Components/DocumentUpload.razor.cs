@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using KmcAiBlazorApp.Models;
+using KmcAiBlazorApp.Services;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 
 namespace KmcAiBlazorApp.Components;
 
@@ -18,6 +18,9 @@ public partial class DocumentUpload : ComponentBase, IDisposable
     [Inject]
     private IHttpClientFactory HttpFactory { get; set; } = default!;
     
+    [Inject]
+    private SignalRNotificationService SignalRService { get; set; } = default!;
+    
     private InputFile? fileInput;
     private DotNetObjectReference<DocumentUpload>? objRef;
     private bool isProcessing = false;
@@ -28,73 +31,28 @@ public partial class DocumentUpload : ComponentBase, IDisposable
     [Parameter]
     public EventCallback<List<UploadedFile>> UploadedFilesChanged { get; set; }
     
-    HubConnection? _conn;
     string? PortfolioId = "test-portfolio-123";
-    bool IsConnected;
     string Status = "Disconnected";
     List<string> Lines = new();
 
-    string HubUrl => "http://localhost:5001/documentProcessingHub";
-
     async Task ConnectAsync()
     {
-        if (IsConnected) return;
-
-        _conn = new HubConnectionBuilder()
-            .WithUrl(HubUrl, options =>
-            {
-                // Force JSON protocol instead of binary
-                options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
-                options.SkipNegotiation = false;
-            })
-            .WithAutomaticReconnect()
-            .AddJsonProtocol(options =>
-            {
-                // Force JSON protocol and disable blazorpack
-                options.PayloadSerializerOptions.PropertyNamingPolicy = null;
-                options.PayloadSerializerOptions.WriteIndented = true;
-            })
-            .Build();
-            
-
-
-        // Wire up server-to-client events (match your backend names)
-        _conn.On<object>("ProcessingUpdate", payload => HandleProcessingUpdate(payload));
-        _conn.On<object>("ReceiveDocumentValidationUpdate", payload => Add("DocumentValidationUpdate", payload));
-        _conn.On<object>("ReceivePortfolioCompletionUpdate", payload => Add("PortfolioCompletionUpdate", payload));
-        _conn.On<object>("ReceiveCompanyHouseValidationUpdate", payload => Add("CompanyHouseValidationUpdate", payload));
-        _conn.On<object>("ReceiveProcessingCompleteUpdate", payload => Add("ProcessingCompleteUpdate", payload));
-        _conn.On<object>("JoinedGroup", payload => Add("JoinedGroup", payload));
-        _conn.On<object>("Connected", payload => Add("Connected", payload));
-
-        _conn.Reconnecting += _ => { Status = "Reconnecting…"; StateHasChanged(); return Task.CompletedTask; };
-        _conn.Reconnected  += _ => { Status = "Reconnected"; StateHasChanged(); return Task.CompletedTask; };
-        _conn.Closed       += _ => { IsConnected = false; Status = "Disconnected"; StateHasChanged(); return Task.CompletedTask; };
-
         try
         {
             Console.WriteLine("Starting SignalR connection...");
-            Console.WriteLine($"Hub URL: {HubUrl}");
-            Console.WriteLine($"Connection configuration: Transports=WebSockets, SkipNegotiation=false");
             
-            await _conn.StartAsync();
+            // Subscribe to SignalR events
+            SignalRService.OnProcessingUpdate += HandleProcessingUpdate;
+            SignalRService.OnDocumentValidationUpdate += HandleDocumentValidationUpdate;
+            SignalRService.OnPortfolioCompletionUpdate += HandlePortfolioCompletionUpdate;
+            SignalRService.OnCompanyHouseValidationUpdate += HandleCompanyHouseValidationUpdate;
+            SignalRService.OnProcessingCompleteUpdate += HandleProcessingCompleteUpdate;
+            SignalRService.OnConnectionStatusChanged += HandleConnectionStatusChanged;
             
-            // Wait a moment to ensure connection is fully established
-            await Task.Delay(100);
+            // Start the connection
+            await SignalRService.StartConnectionAsync();
             
-            // Double-check connection state
-            if (_conn.State == HubConnectionState.Connected)
-            {
-                IsConnected = true;
-                Status = "Connected";
-                Add("System", new { message = "Connected to hub" });
-                Console.WriteLine("SignalR connection established successfully");
-                Console.WriteLine($"Connection ID: {_conn.ConnectionId}");
-            }
-            else
-            {
-                throw new Exception($"Connection failed. State: {_conn.State}");
-            }
+            Console.WriteLine("SignalR connection established successfully");
         }
         catch (Exception ex)
         {
@@ -106,33 +64,36 @@ public partial class DocumentUpload : ComponentBase, IDisposable
 
     async Task DisconnectAsync()
     {
-        if (_conn is null) return;
-        try { await _conn.StopAsync(); } catch {}
-        await _conn.DisposeAsync();
-        _conn = null;
-        IsConnected = false;
-        Status = "Disconnected";
+        try
+        {
+            // Unsubscribe from events
+            SignalRService.OnProcessingUpdate -= HandleProcessingUpdate;
+            SignalRService.OnDocumentValidationUpdate -= HandleDocumentValidationUpdate;
+            SignalRService.OnPortfolioCompletionUpdate -= HandlePortfolioCompletionUpdate;
+            SignalRService.OnCompanyHouseValidationUpdate -= HandleCompanyHouseValidationUpdate;
+            SignalRService.OnProcessingCompleteUpdate -= HandleProcessingCompleteUpdate;
+            SignalRService.OnConnectionStatusChanged -= HandleConnectionStatusChanged;
+            
+            Status = "Disconnected";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error disconnecting: {ex.Message}");
+        }
     }
 
     async Task JoinGroupAsync()
     {
-        if (!IsConnected || _conn is null || string.IsNullOrWhiteSpace(PortfolioId)) 
+        if (string.IsNullOrWhiteSpace(PortfolioId)) 
         {
-            Console.WriteLine($"Cannot join group: IsConnected={IsConnected}, Connection={_conn?.State}, PortfolioId={PortfolioId}");
-            return;
-        }
-        
-        // Check if connection is in the right state
-        if (_conn.State != HubConnectionState.Connected)
-        {
-            Console.WriteLine($"Connection not ready. Current state: {_conn.State}");
+            Console.WriteLine($"Cannot join group: PortfolioId={PortfolioId}");
             return;
         }
         
         try
         {
             Console.WriteLine($"Attempting to join group: {PortfolioId}");
-            await _conn.InvokeAsync("JoinPortfolioGroup", PortfolioId);
+            await SignalRService.JoinPortfolioGroupAsync(PortfolioId);
             Add("System", new { message = $"Joined group {PortfolioId}" });
             Console.WriteLine($"Successfully joined group: {PortfolioId}");
         }
@@ -145,10 +106,10 @@ public partial class DocumentUpload : ComponentBase, IDisposable
 
     async Task LeaveGroupAsync()
     {
-        if (!IsConnected || _conn is null || string.IsNullOrWhiteSpace(PortfolioId)) return;
+        if (string.IsNullOrWhiteSpace(PortfolioId)) return;
         try
         {
-            await _conn.InvokeAsync("LeavePortfolioGroup", PortfolioId);
+            await SignalRService.LeavePortfolioGroupAsync(PortfolioId);
             Add("System", new { message = $"Left group {PortfolioId}" });
         }
         catch (Exception ex) { Add("Error", new { message = $"Leave failed: {ex.Message}" }); }
@@ -156,48 +117,133 @@ public partial class DocumentUpload : ComponentBase, IDisposable
 
     void Add(string title, object payload)
     {
-        var json = System.Text.Json.JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
-        Lines.Add($"{title}\n{json}");
-        StateHasChanged();
+                    var json = System.Text.Json.JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+            Lines.Add($"{title}\n{json}");
+            _ = InvokeAsync(StateHasChanged);
     }
 
-    // Specific method to handle processing updates from SignalR
-    private void HandleProcessingUpdate(object update)
+    // Event handlers for SignalR updates
+    private void HandleProcessingUpdate(ProcessingUpdate update)
     {
         try
         {
-            // Log the processing update
             Console.WriteLine($"SignalR Processing Update Received: {JsonSerializer.Serialize(update, new JsonSerializerOptions { WriteIndented = true })}");
             
-            // Try to parse as JSON if it's a string
-            if (update is string jsonString)
-            {
-                try
-                {
-                    var jsonElement = JsonSerializer.Deserialize<JsonElement>(jsonString);
-                    Console.WriteLine($"Parsed JSON: {JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions { WriteIndented = true })}");
-                    Add("ProcessingUpdate", jsonElement);
-                }
-                catch
-                {
-                    // If parsing fails, treat as regular string
-                    Add("ProcessingUpdate", update);
-                }
-            }
-            else
-            {
-                Add("ProcessingUpdate", update);
-            }
+            // Update status with progress label
+            Status = $"🔄 Processing: {update.Message} ({update.Progress}%)";
             
-            // You can add specific logic here based on the update content
-            // For example, update UI, show notifications, etc.
-            
-            // Force UI refresh
-            StateHasChanged();
+            Add("ProcessingUpdate", update);
+            _ = InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error handling processing update: {ex.Message}");
+        }
+    }
+
+    private void HandleDocumentValidationUpdate(DocumentValidationUpdate update)
+    {
+        try
+        {
+            Console.WriteLine($"Document Validation Update: {JsonSerializer.Serialize(update, new JsonSerializerOptions { WriteIndented = true })}");
+            
+            // Update status with document validation progress
+            var validCount = update.ValidDocuments;
+            var invalidCount = update.InvalidDocuments;
+            var totalCount = update.TotalDocuments;
+            Status = $"📋 Document Validation: {validCount} valid, {invalidCount} invalid out of {totalCount} total ({update.Progress}%)";
+            
+            Add("DocumentValidationUpdate", update);
+            _ = InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling document validation update: {ex.Message}");
+        }
+    }
+
+    private void HandlePortfolioCompletionUpdate(PortfolioCompletionUpdate update)
+    {
+        try
+        {
+            Console.WriteLine($"Portfolio Completion Update: {JsonSerializer.Serialize(update, new JsonSerializerOptions { WriteIndented = true })}");
+            
+            // Update status with portfolio completion progress
+            var hasData = update.HasPortfolioData ? "Found" : "Not found";
+            var companyName = !string.IsNullOrEmpty(update.CompanyName) ? update.CompanyName : "N/A";
+            Status = $"📊 Portfolio Validation: {hasData} portfolio data, Company: {companyName}, Properties: {update.PropertyCount} ({update.Progress}%)";
+            
+            Add("PortfolioCompletionUpdate", update);
+            _ = InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling portfolio completion update: {ex.Message}");
+        }
+    }
+
+    private void HandleCompanyHouseValidationUpdate(CompanyHouseValidationUpdate update)
+    {
+        try
+        {
+            Console.WriteLine($"Company House Validation Update: {JsonSerializer.Serialize(update, new JsonSerializerOptions { WriteIndented = true })}");
+            
+            // Update status with company house validation progress
+            var hasData = update.HasCompanyData ? "Found" : "Not found";
+            var companyNumber = !string.IsNullOrEmpty(update.CompanyNumber) ? update.CompanyNumber : "N/A";
+            Status = $"🏢 Company House Validation: {hasData} company data, Company Number: {companyNumber}, Charges: {update.ChargeCount} ({update.Progress}%)";
+            
+            Add("CompanyHouseValidationUpdate", update);
+            _ = InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling company house validation update: {ex.Message}");
+        }
+    }
+
+    private void HandleProcessingCompleteUpdate(ProcessingCompleteUpdate update)
+    {
+        try
+        {
+            Console.WriteLine($"Processing Complete Update: {JsonSerializer.Serialize(update, new JsonSerializerOptions { WriteIndented = true })}");
+            
+            // Update status with processing completion
+            var successStatus = update.Success ? "✅ Successfully completed" : "❌ Failed";
+            var processingTime = !string.IsNullOrEmpty(update.ProcessingTime) ? update.ProcessingTime : "N/A";
+            Status = $"🎯 Processing Complete: {successStatus} in {processingTime} ({update.Progress}%)";
+            
+            Add("ProcessingCompleteUpdate", update);
+            _ = InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling processing complete update: {ex.Message}");
+        }
+    }
+
+    private void HandleConnectionStatusChanged(string status)
+    {
+        try
+        {
+            // Add emoji and better formatting for connection status
+            var statusWithEmoji = status switch
+            {
+                "Connected" => "🔗 Connected to SignalR",
+                "Reconnecting" => "🔄 Reconnecting to SignalR...",
+                "Reconnected" => "✅ Reconnected to SignalR",
+                "Disconnected" => "❌ Disconnected from SignalR",
+                "Failed to connect" => "❌ Failed to connect to SignalR",
+                _ => $"📡 {status}"
+            };
+            
+            Status = statusWithEmoji;
+            Console.WriteLine($"Connection status changed: {status}");
+            _ = InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling connection status change: {ex.Message}");
         }
     }
 
@@ -209,11 +255,8 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             PortfolioId = portfolioId;
             Console.WriteLine($"Updated Portfolio ID: {PortfolioId}");
             
-            // If already connected, join the new group
-            if (IsConnected && _conn != null)
-            {
-                await JoinGroupAsync();
-            }
+            // Join the new group
+            await JoinGroupAsync();
         }
         catch (Exception ex)
         {
@@ -223,11 +266,7 @@ public partial class DocumentUpload : ComponentBase, IDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (_conn != null)
-        {
-            try { await _conn.StopAsync(); } catch {}
-            await _conn.DisposeAsync();
-        }
+        await DisconnectAsync();
     }
     
     
@@ -293,33 +332,31 @@ public partial class DocumentUpload : ComponentBase, IDisposable
     
     private async Task StartProcessing()
     {
+        MultipartFormDataContent? formData = null;
         try
         {
             if (!UploadedFiles.Any())
             {
                 Console.WriteLine("No files to process");
+                await ShowErrorSafe("No files to process. Please upload files and try again.");
                 return;
             }
 
             isProcessing = true;
-            StateHasChanged();
+            _ = InvokeAsync(StateHasChanged);
 
-            // Connect to SignalR and join portfolio group
-            await ConnectAsync();
-            
-            // Wait for connection to be fully established before joining group
-            if (IsConnected && _conn?.State == HubConnectionState.Connected)
-            {
-                await JoinGroupAsync();
-            }
-            else
-            {
-                Console.WriteLine("SignalR connection not ready, skipping group join");
-            }
+            // Disconnect any existing SignalR connection
+            await DisconnectAsync();
+            Console.WriteLine("Disconnected from previous SignalR connection");
 
-            
+            // Generate new portfolio ID for each processing session
+            PortfolioId = Guid.NewGuid().ToString();
+            Console.WriteLine($"Generated new portfolio ID: {PortfolioId}");
 
-            Console.WriteLine(Lines);
+            // Clear previous SignalR messages for fresh start
+            Lines.Clear();
+            Status = "Disconnected";
+            _ = InvokeAsync(StateHasChanged);
 
             Console.WriteLine($"Starting processing for {UploadedFiles.Count} files...");
             
@@ -330,8 +367,13 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             }
 
             // Create FormData to send files
-            using var formData = new MultipartFormDataContent();
+            formData = new MultipartFormDataContent();
             var processedFiles = 0;
+            var streamContents = new List<StreamContent>(); // Keep reference to dispose later
+            
+            // Add portfolio ID to form data (same ID used for SignalR)
+            formData.Add(new StringContent(PortfolioId), "portfolioId");
+            Console.WriteLine($"Added portfolio ID to form data: {PortfolioId}");
             
             foreach (var uploadedFile in UploadedFiles)
             {
@@ -339,17 +381,12 @@ public partial class DocumentUpload : ComponentBase, IDisposable
                 {
                     try
                     {
-                        // Validate file object
-                        if (uploadedFile.File == null)
-                        {
-                            Console.WriteLine($"Warning: File {uploadedFile.Name} has null File object");
-                            continue;
-                        }
+                        Console.WriteLine($"Processing file: {uploadedFile.Name}, Size: {uploadedFile.Size}");
                         
-                        // Validate file size (50MB limit as per your backend)
-                        if (uploadedFile.Size > 50 * 1024 * 1024)
+                        // Validate file size (100MB limit)
+                        if (uploadedFile.Size > 100 * 1024 * 1024)
                         {
-                            Console.WriteLine($"Warning: File {uploadedFile.Name} exceeds 50MB limit ({uploadedFile.Size} bytes)");
+                            Console.WriteLine($"Warning: File {uploadedFile.Name} exceeds 100MB limit ({uploadedFile.Size} bytes)");
                             continue;
                         }
                         
@@ -367,36 +404,39 @@ public partial class DocumentUpload : ComponentBase, IDisposable
                             continue;
                         }
                         
-                        // Read the file content - IBrowserFile.OpenReadStream() can only be called once
-                        Console.WriteLine($"Opening stream for file: {uploadedFile.Name}");
-                        var stream = uploadedFile.File.OpenReadStream();
-                        Console.WriteLine($"Stream opened successfully for: {uploadedFile.Name}");
+                        // Read the file content into a byte array first to avoid stream issues
+                        Console.WriteLine($"Reading file content for: {uploadedFile.Name}");
+                        var stream = uploadedFile.File.OpenReadStream(maxAllowedSize: 100 * 1024 * 1024); // 100MB limit
                         
-                        // Create StreamContent directly from the stream
-                        var streamContent = new StreamContent(stream);
-                        Console.WriteLine($"StreamContent created for: {uploadedFile.Name}");
+                        // Read stream content into memory
+                        using var memoryStream = new MemoryStream();
+                        await stream.CopyToAsync(memoryStream);
+                        var fileBytes = memoryStream.ToArray();
+                        
+                        Console.WriteLine($"File read into memory: {uploadedFile.Name}, Bytes: {fileBytes.Length}");
+                        
+                        // Create ByteArrayContent from the byte array
+                        var byteArrayContent = new ByteArrayContent(fileBytes);
                         
                         // Set the content type
-                        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(uploadedFile.ContentType);
-                        Console.WriteLine($"Content type set for: {uploadedFile.Name}");
+                        if (!string.IsNullOrEmpty(uploadedFile.ContentType))
+                        {
+                            byteArrayContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(uploadedFile.ContentType);
+                        }
                         
                         // Add the file to form data with the correct parameter name
-                        // The parameter name should match your backend: [FromForm] List<IFormFile> files
-                        // For IFormFile, the first parameter is the form field name, second is the filename
-                        formData.Add(streamContent, "files", uploadedFile.Name);
+                        // Use "files" as the field name for each file - ASP.NET Core will bind this to List<IFormFile> files
+                        formData.Add(byteArrayContent, "files", uploadedFile.Name);
                         Console.WriteLine($"File added to form data: {uploadedFile.Name}");
                         
                         processedFiles++;
-                        Console.WriteLine($"Added file: {uploadedFile.Name} ({uploadedFile.Size} bytes) - ContentType: {uploadedFile.ContentType}");
-                        Console.WriteLine($"Form field name: files, Filename: {uploadedFile.Name}");
-                        Console.WriteLine($"Stream length: {uploadedFile.Size} bytes");
+                        Console.WriteLine($"Added file: {uploadedFile.Name} ({fileBytes.Length} bytes) - ContentType: {uploadedFile.ContentType}");
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"Error processing file {uploadedFile.Name}: {ex.Message}");
                         Console.WriteLine($"Stack trace: {ex.StackTrace}");
                         
-                        // Try to get more details about the error
                         if (ex.InnerException != null)
                         {
                             Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
@@ -405,7 +445,7 @@ public partial class DocumentUpload : ComponentBase, IDisposable
                 }
                 else
                 {
-                    Console.WriteLine($"Warning: File {uploadedFile.Name} has no content (drag & drop file)");
+                    Console.WriteLine($"Warning: File {uploadedFile.Name} has no content");
                 }
             }
             
@@ -413,98 +453,94 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             if (processedFiles == 0)
             {
                 Console.WriteLine("No valid files to process");
-                await JSRuntime.InvokeVoidAsync("alert", "No valid files to process. Please upload files and try again.");
+                await ShowErrorSafe("No valid files to process. Please upload files and try again.");
                 return;
             }
 
-            // Debug: Log the form data content
-            Console.WriteLine($"Form data contains {formData.Count()} parts");
+            Console.WriteLine($"Form data ready with {processedFiles} files");
             
+            // Debug: Log form data information
+            Console.WriteLine("=== FORM DATA DETAILS ===");
+            Console.WriteLine($"Total form data parts: {formData.Count()}");
+            Console.WriteLine($"Portfolio ID: {PortfolioId}");
+            var partIndex = 0;
             foreach (var content in formData)
             {
-                Console.WriteLine($"Content: {content.Headers.ContentType}");
-                Console.WriteLine($"Content-Disposition: {content.Headers.ContentDisposition}");
-                Console.WriteLine($"Form Field Name: {content.Headers.ContentDisposition?.Name}");
-                Console.WriteLine($"Filename: {content.Headers.ContentDisposition?.FileName}");
-                Console.WriteLine($"Content Length: {content.Headers.ContentLength}");
+                Console.WriteLine($"Part {partIndex++}:");
+                Console.WriteLine($"  Content Type: {content.Headers.ContentType}");
+                Console.WriteLine($"  Content-Disposition: {content.Headers.ContentDisposition}");
+                Console.WriteLine($"  Form Field Name: {content.Headers.ContentDisposition?.Name?.Trim('"')}");
+                Console.WriteLine($"  Filename: {content.Headers.ContentDisposition?.FileName?.Trim('"')}");
+                Console.WriteLine($"  Content Length: {content.Headers.ContentLength}");
+                Console.WriteLine("  ---");
             }
+            Console.WriteLine("=== END FORM DATA DETAILS ===");
+
+            // Connect to SignalR and join portfolio group
+            await ConnectAsync();
+            await JoinGroupAsync();
 
             // Call the backend API
             using var httpClient = HttpFactory.CreateClient("BackendAPI");
-            Console.WriteLine($"Sending POST request to: /api/documentupload/upload2");
+            Console.WriteLine($"Sending POST request to: /api/DocumentUpload/upload2");
+            Console.WriteLine($"Request URI: {httpClient.BaseAddress}api/DocumentUpload/upload2");
             
-            // Log the request details
-            Console.WriteLine($"Request URI: {httpClient.BaseAddress}api/documentupload/upload2");
-            Console.WriteLine($"Form data parts count: {formData.Count()}");
+            // Set a longer timeout for file uploads
+            httpClient.Timeout = TimeSpan.FromMinutes(30);
             
-            var response = await httpClient.PostAsync("/api/documentupload/upload2", formData);
+            Console.WriteLine($"Starting API call with 30-minute timeout...");
+            Console.WriteLine($"Complete URL: {httpClient.BaseAddress}api/DocumentUpload/upload2");
+            Console.WriteLine($"Portfolio ID being sent: {PortfolioId}");
+            Console.WriteLine($"Form data parts: {formData.Count()}");
+            
+            // Make the API call
+            var response = await httpClient.PostAsync("/api/DocumentUpload/upload2", formData);
+            
+            Console.WriteLine($"API Response Status: {response.StatusCode}");
+            Console.WriteLine($"API Response Headers: {string.Join(", ", response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"))}");
             
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Response content: {responseContent}");
+                Console.WriteLine($"Response content length: {responseContent.Length}");
+                Console.WriteLine($"Response content (first 1000 chars): {responseContent.Substring(0, Math.Min(1000, responseContent.Length))}");
                 
                 try
                 {
                     var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
                     Console.WriteLine("API call successful!");
                     
-                    // // Extract validation results
-                    // var portfolioId = result.GetProperty("PortfolioId").GetString();
-                    // var status = result.GetProperty("Status").GetString();
+                    // Extract basic response information
+                    if (result.TryGetProperty("PortfolioId", out var portfolioIdElement))
+                    {
+                        var portfolioId = portfolioIdElement.GetString();
+                        Console.WriteLine($"Portfolio ID: {portfolioId}");
+                        
+                        // Update portfolio ID and join new group if needed
+                        if (!string.IsNullOrEmpty(portfolioId) && portfolioId != PortfolioId)
+                        {
+                            await UpdatePortfolioIdAndJoinGroup(portfolioId);
+                        }
+                    }
                     
-                    // // Get summary information
-                    // var summary = result.GetProperty("Summary");
-                    // var totalDocuments = summary.GetProperty("TotalDocuments").GetInt32();
-                    // var validDocuments = summary.GetProperty("ValidDocuments").GetInt32();
-                    // var invalidDocuments = summary.GetProperty("InvalidDocuments").GetInt32();
+                    // Connect to SignalR and join the new portfolio group
+                    await ConnectAsync();
+                    await JoinGroupAsync();
+                    Console.WriteLine($"Connected to SignalR and joined group: {PortfolioId}");
                     
-                    // // Build validation message
-                    // var validationMessage = $"Portfolio ID: {portfolioId}\n";
-                    // validationMessage += $"Status: {status}\n\n";
-                    // validationMessage += $"Total Documents: {totalDocuments}\n";
-                    // validationMessage += $"Valid Documents: {validDocuments}\n";
-                    // validationMessage += $"Invalid Documents: {invalidDocuments}\n\n";
+                    if (result.TryGetProperty("Status", out var statusElement))
+                    {
+                        var status = statusElement.GetString();
+                        Console.WriteLine($"Status: {status}");
+                    }
                     
-                    // // Add valid documents details
-                    // if (validDocuments > 0)
-                    // {
-                    //     validationMessage += "✅ VALID DOCUMENTS:\n";
-                    //     var validDocs = result.GetProperty("UploadedDocuments");
-                    //     foreach (var doc in validDocs.EnumerateArray())
-                    //     {
-                    //         var fileName = doc.GetProperty("FileName").GetString();
-                    //         var documentType = doc.GetProperty("DocumentType").GetString();
-                    //         validationMessage += $"• {fileName} ({documentType})\n";
-                    //     }
-                    //     validationMessage += "\n";
-                    // }
-                    
-                    // // Add invalid documents details
-                    // if (invalidDocuments > 0)
-                    // {
-                    //     validationMessage += "❌ INVALID DOCUMENTS:\n";
-                    //     var invalidDocs = result.GetProperty("InvalidDocuments");
-                    //     foreach (var doc in invalidDocs.EnumerateArray())
-                    //     {
-                    //         var fileName = doc.GetProperty("FileName").GetString();
-                    //         var reason = doc.GetProperty("Reason").GetString();
-                    //         var identifiedType = doc.TryGetProperty("IdentifiedType", out var idType) ? idType.GetString() : "Unknown";
-                    //         validationMessage += $"• {fileName} ({identifiedType}) - {reason}\n";
-                    //     }
-                    // }
-                    
-                    // Show validation results in alert
-                    // await JSRuntime.InvokeVoidAsync("alert", validationMessage);
-                    
-                    // Console.WriteLine($"Portfolio ID: {portfolioId}");
-                    // Console.WriteLine($"Status: {status}");
-                    // Console.WriteLine($"Valid: {validDocuments}, Invalid: {invalidDocuments}");
+                    // Show success message
+                    await ShowErrorSafe("Files uploaded successfully! Processing has started.");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error parsing response: {ex.Message}");
-                    await JSRuntime.InvokeVoidAsync("alert", $"Error parsing response: {ex.Message}");
+                    await ShowErrorSafe($"Error parsing response: {ex.Message}");
                 }
             }
             else
@@ -512,7 +548,7 @@ public partial class DocumentUpload : ComponentBase, IDisposable
                 var errorContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"API call failed: {response.StatusCode}");
                 Console.WriteLine($"Response headers: {string.Join(", ", response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"))}");
-                Console.WriteLine($"Error: {errorContent}");
+                Console.WriteLine($"Error content: {errorContent}");
                 
                 // Build error message for user
                 var errorMessage = $"❌ PROCESSING FAILED\n\n";
@@ -521,8 +557,18 @@ public partial class DocumentUpload : ComponentBase, IDisposable
                 errorMessage += "Please check your files and try again.";
                 
                 // Show error notification to user
-                await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+                await ShowErrorSafe(errorMessage);
             }
+        }
+        catch (TaskCanceledException ex)
+        {
+            Console.WriteLine($"API call timed out: {ex.Message}");
+            await ShowErrorSafe("API call timed out. The request took too long to complete. Please try with fewer files or check your API server.");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"HTTP request error: {ex.Message}");
+            await ShowErrorSafe($"HTTP request error: {ex.Message}. Please check if your API server is running.");
         }
         catch (Exception ex)
         {
@@ -530,15 +576,18 @@ public partial class DocumentUpload : ComponentBase, IDisposable
             Console.WriteLine($"Stack trace: {ex.StackTrace}");
             
             // Show error notification to user
-            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+            await ShowErrorSafe($"Error: {ex.Message}");
         }
         finally
         {
+            // Clean up form data
+            formData?.Dispose();
+            
             isProcessing = false;
-            StateHasChanged();
+            _ = InvokeAsync(StateHasChanged);
         }
     }
-
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -552,4 +601,34 @@ public partial class DocumentUpload : ComponentBase, IDisposable
     {
         objRef?.Dispose();
     }
+
+    private async Task ShowErrorSafe(string message)
+    {
+        try
+        {
+            // Check if the circuit is still connected before calling JS interop
+            if (JSRuntime is not null)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", message);
+            }
+            else
+            {
+                // Fallback: log to console if JS interop is not available
+                Console.WriteLine($"Error (JS interop not available): {message}");
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit has disconnected, just log to console
+            Console.WriteLine($"Error (circuit disconnected): {message}");
+        }
+        catch (Exception ex)
+        {
+            // Any other error, log to console
+            Console.WriteLine($"Error showing message: {ex.Message}");
+            Console.WriteLine($"Original message: {message}");
+        }
+    }
+
+
 }

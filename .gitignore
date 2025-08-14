@@ -30,3 +30,8 @@ obj/
 *.suo
 *.cache
 *.log
+KmcAiBlazorApp/wwwroot/app.css
+KmcAiBlazorApp/obj/project.nuget.cache
+KmcAiBlazorApp/obj/project.assets.json
+KmcAiBlazorApp/obj/KmcAiBlazorApp.csproj.nuget.g.targets
+KmcAiBlazorApp/obj/KmcAiBlazorApp.csproj.nuget.dgspec.json

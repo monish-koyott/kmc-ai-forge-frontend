@@ -78,4 +78,54 @@
             </button>
         </div>
     }
+    
+    <!-- Processing Status -->
+    @if (isProcessing || !string.IsNullOrEmpty(Status))
+    {
+        <div class="processing-status">
+            <div class="status-content">
+                <div class="status-indicator">
+                    @if (isProcessing)
+                    {
+                        <div class="spinner"></div>
+                    }
+                    else if (Status.Contains("✅"))
+                    {
+                        <span class="success-icon">✅</span>
+                    }
+                    else if (Status.Contains("❌"))
+                    {
+                        <span class="error-icon">❌</span>
+                    }
+                    else
+                    {
+                        <span class="info-icon">📡</span>
+                    }
+                </div>
+                <div class="status-text">
+                    <p class="status-title">@Status</p>
+                    @if (isProcessing)
+                    {
+                        <p class="status-subtitle">Processing your documents...</p>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    
+    <!-- SignalR Messages -->
+    @if (Lines.Any())
+    {
+        <div class="signalr-messages">
+            <h4>Real-time Updates</h4>
+            <div class="messages-container">
+                @foreach (var line in Lines)
+                {
+                    <div class="message-item">
+                        <pre>@line</pre>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 </div>
