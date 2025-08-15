@@ -1,0 +1,80 @@
+@using KmcAiBlazorApp.Models
+@rendermode InteractiveServer
+
+<div class="modal-overlay @(IsVisible ? "show" : "")" @onclick="CloseModal">
+    <div class="modal-content" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h3>Processing Documents</h3>
+            <button class="close-button" @onclick="CloseModal">×</button>
+        </div>
+        
+        <div class="modal-body">
+            <p class="instruction-text">Please wait while we analyze your portfolio documents.</p>
+            
+            <div class="processing-steps">
+                @foreach (var step in ProcessingSteps)
+                {
+                    <div class="processing-step @(GetStepStatusClass(step.Status))">
+                        <div class="step-icon">
+                            @if (step.Status == ProcessingStatus.Success)
+                            {
+                                <span class="checkmark">✓</span>
+                            }
+                            else if (step.Status == ProcessingStatus.Failure)
+                            {
+                                <span class="failure">✗</span>
+                            }
+                            else if (step.Status == ProcessingStatus.InProgress)
+                            {
+                                <span class="spinner">⟳</span>
+                            }
+                            else if (step.Status == ProcessingStatus.Alert)
+                            {
+                                <span class="alert">⚠️</span>
+                            }
+                            else
+                            {
+                                <span class="pending">○</span>
+                            }
+                        </div>
+                        <div class="step-content">
+                            <div class="step-text">@step.Description</div>
+                            @if (!string.IsNullOrEmpty(step.ValidationMessage))
+                            {
+                                <div class="validation-message @(GetStepStatusClass(step.Status))">
+                                    @step.ValidationMessage
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <div class="progress-section">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: @(ProgressPercentage)%"></div>
+                </div>
+                <div class="progress-text">@(ProgressPercentage)% Complete</div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" @onclick="CancelProcessing">Cancel</button>
+            <button class="btn btn-primary" @onclick="ViewResults" disabled="@(!IsProcessingComplete)">See Results</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string GetStepStatusClass(ProcessingStatus status)
+    {
+        return status switch
+        {
+            ProcessingStatus.Success => "step-completed",
+            ProcessingStatus.Failure => "step-failed",
+            ProcessingStatus.InProgress => "step-in-progress",
+            ProcessingStatus.Alert => "step-alert",
+            _ => "step-pending"
+        };
+    }
+}
