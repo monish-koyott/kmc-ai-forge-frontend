@@ -7,8 +7,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components.Server.Circuits;
-using ProcessingStatus = KmcAiBlazorApp.Models.ProcessingStatus;
-using ProcessingStep = KmcAiBlazorApp.Models.ProcessingStep;
 
 namespace KmcAiBlazorApp.Components;
 
